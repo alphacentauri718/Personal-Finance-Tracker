@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h1>Dashboard</h1>
+
+<ul>
+    <li>Total Assets: ${{ total_assets }}</li>
+    <li>Total Expenses: ${{ total_expenses }}</li>
+    <li>Net Worth: ${{ net_worth }}</li>
+</ul>
+{% endblock %}

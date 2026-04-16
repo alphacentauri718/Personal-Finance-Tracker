@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2>Net Worth Over Time</h2>
+
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<div style="width: 80%; max-width: 800px; margin: auto;">
+    <canvas id="netWorthChart" style="height: 400px;"></canvas>
+</div>
+
+<script>
+const labels = {{ dates | tojson }};
+const data = {{ values | tojson }};
+
+const ctx = document.getElementById('netWorthChart').getContext('2d');
+
+new Chart(ctx, {
+    type: 'line',
+    data: {
+        labels: labels,
+        datasets: [{
+            label: 'Net Worth',
+            data: data,
+            borderWidth: 2,
+            tension: 0.3
+}]
+        
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+            y: {
+                ticks: {
+                    callback: function(value) {
+                        return '$' + value;
+                    }
+                }
+            }
+        }
+    }
+});
+</script>
+
+{% endblock %}
