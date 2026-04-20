@@ -20,17 +20,24 @@
 
 </form>
 
-<h2>Your Assets</h2>
-<ul>
-{% for asset in assets %}
-    <li>
-        {{ asset.name }} ({{ asset.type }}) - ${{ asset.value }}
-        <form method="post" action="/assets/delete/{{ asset.id }}" style="display:inline;">
-            <button type="submit">Delete</button>
-        </form>
-    </li>
-{% endfor %}
-</ul>
+<table class="w-full bg-white rounded-2xl shadow mt-6 overflow-hidden">
+    <thead class="bg-gray-200">
+        <tr>
+            <th class="p-3 text-left">Description</th>
+            <th class="p-3 text-left">Category</th>
+            <th class="p-3 text-left">Amount</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for expense in expenses %}
+        <tr class="border-t">
+            <td class="p-3">{{ expense.description }}</td>
+            <td class="p-3">{{ expense.category }}</td>
+            <td class="p-3">${{ expense.amount }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
 
 
 {% endblock %}

@@ -23,20 +23,20 @@
 
 
 <!-- List all expenses -->
-<table>
-    <thead>
+<table class="w-full bg-white rounded-2xl shadow mt-6 overflow-hidden">
+    <thead class="bg-gray-200">
         <tr>
-            <th>Name</th>
-            <th>Category</th>
-            <th>Amount</th>
+            <th class="p-3 text-left">Description</th>
+            <th class="p-3 text-left">Category</th>
+            <th class="p-3 text-left">Amount</th>
         </tr>
     </thead>
     <tbody>
         {% for expense in expenses %}
-        <tr>
-            <td>{{ expense.description }}</td>
-            <td>{{ expense.category }}</td>
-            <td>${{ "%.2f"|format(expense.amount) }}</td>
+        <tr class="border-t">
+            <td class="p-3">{{ expense.description }}</td>
+            <td class="p-3">{{ expense.category }}</td>
+            <td class="p-3">${{ expense.amount }}</td>
         </tr>
         {% endfor %}
     </tbody>
