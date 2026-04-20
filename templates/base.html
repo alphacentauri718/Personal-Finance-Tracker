@@ -1,10 +1,14 @@
 <!DOCTYPE html>
 <html>
 <head>
+    <script src="https://cdn.tailwindcss.com"></script>
     <title>Personal Finance Tracker</title>
 </head>
-<body>
-<nav>
+
+<body class="bg-gray-100 text-gray-800">
+<nav class="bg-white shadow-md p-4 flex justify-between">
+    <h1 class="text-xl font-semibold">Finance Tracker</h1>
+    <div>
     <a href="/">Dashboard</a> |
     <a href="/assets">Assets</a> |
     <a href="/expenses">Expenses</a> |
@@ -12,9 +16,9 @@
     <a href="/signup">Sign Up</a> |
     <a href="/logout">Logout</a>
 </nav>
-<hr>
-
-
+<div class="p-6 max-w-5xl mx-auto">
     {% block content %}{% endblock %}
+</div>
+
 </body>
 </html>
