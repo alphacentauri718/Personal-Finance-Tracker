@@ -79,7 +79,7 @@ def dashboard(request: Request, db: Session = Depends(get_db)):
     total_assets = sum(a.value for a in db.query(Asset).filter(Asset.user_id == user.id).all())
     total_expenses = sum(e.amount for e in db.query(Expense).filter(Expense.user_id == user.id).all())
     net_worth = total_assets - total_expenses
-    
+    print(total_assets, total_expenses, net_worth)
     return templates.TemplateResponse("home.html", {
         "request": request,
         "total_assets": total_assets,
@@ -207,8 +207,8 @@ def net_worth_history(request: Request, db: Session = Depends(get_db)):
     })
 
 @app.post("/assets/delete/{asset_id}")
-def delete_asset(request: Request, asset_id: int):
-    db: Session = Depends(get_db)
+def delete_asset(request: Request, asset_id: int, db: Session = Depends(get_db)):
+    
     user = get_current_user(request, db)
 
     asset = db.query(Asset).filter(
@@ -218,19 +218,20 @@ def delete_asset(request: Request, asset_id: int):
     if asset:
         db.delete(asset)
         db.commit()
-    return {"status": "ok"}
+    return RedirectResponse(url="/assets", status_code=302)
 
 @app.post("/expenses/delete/{expense_id}")
-def delete_expense(request: Request, expense_id: int):
-    db: Session = Depends(get_db)
+def delete_expense(request: Request,expense_id: int, db: Session = Depends(get_db)):
+    
     user = get_current_user(request, db)
 
     expense = db.query(Expense).filter(
         Expense.id == expense_id,
-        Expense.user_id == user.id
-    ).first()
+        Expense.user_id == user.id).first()
     if expense:
         db.delete(expense)
         db.commit()
-    return {"status": "ok"}
+    db.close()
+
+    return RedirectResponse(url="/expenses", status_code=302)
 
