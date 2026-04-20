@@ -28,12 +28,13 @@
             <th class="p-3 text-left">Amount</th>
         </tr>
     </thead>
+    <h2>Your Assets</h2>
     <tbody>
         {% for asset in assets %}
         <tr class="border-t">
-            <td class="p-3">{{ asset.description }}</td>
-            <td class="p-3">{{ asset.category }}</td>
-            <td class="p-3">${{ asset.amount }}</td>
+            <td class="p-3">{{ asset.name }}</td>
+            <td class="p-3">{{ asset.type }}</td>
+            <td class="p-3">${{ asset.value }}</td>
         </tr>
         {% endfor %}
     </tbody>
