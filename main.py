@@ -20,6 +20,12 @@ app = FastAPI()
 
 
 templates = Jinja2Templates(directory="templates")
+def format_currency(value):
+    if value is None:
+        return "$0.00"
+    return "${:,.2f}".format(value)
+
+templates.env.filters["currency"] = format_currency
 
 @app.get("/signup", response_class=HTMLResponse)
 def signup_page(request: Request):
@@ -68,7 +74,16 @@ def root(request: Request, db: Session = Depends(get_db)):
     if not user:
         return templates.TemplateResponse("splash.html", {"request": request})
 
-    return templates.TemplateResponse("home.html", {"request": request})
+    total_assets = sum(a.value for a in db.query(Asset).filter(Asset.user_id == user.id).all())
+    total_expenses = sum(e.amount for e in db.query(Expense).filter(Expense.user_id == user.id).all())
+    net_worth = total_assets - total_expenses
+
+    return templates.TemplateResponse("home.html", {
+    "request": request,
+    "total_assets": total_assets,
+    "total_expenses": total_expenses,
+    "net_worth": net_worth
+})
 
 @app.get("/dashboard", response_class=HTMLResponse)
 def dashboard(request: Request, db: Session = Depends(get_db)):
@@ -79,7 +94,7 @@ def dashboard(request: Request, db: Session = Depends(get_db)):
     total_assets = sum(a.value for a in db.query(Asset).filter(Asset.user_id == user.id).all())
     total_expenses = sum(e.amount for e in db.query(Expense).filter(Expense.user_id == user.id).all())
     net_worth = total_assets - total_expenses
-    print(total_assets, total_expenses, net_worth)
+
     return templates.TemplateResponse("home.html", {
         "request": request,
         "total_assets": total_assets,
