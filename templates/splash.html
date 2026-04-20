@@ -1,19 +1,43 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Personal Finance Tracker</title>
+    <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body>
-<div style="text-align: center; margin-top: 100px;">
-    <h1>Welcome to FinanceTracker</h1>
-    <p>Track your net worth. Control your spending. Build your future.</p>
 
-    <div style="margin-top: 40px;">
-        <a href="/signup"><button>Get Started</button></a>
-        <a href="/login"><button>Log In</button></a>
+<body class="bg-gray-950 text-white">
+
+<div class="min-h-screen flex flex-col items-center justify-center text-center px-6">
+
+    <h1 class="text-5xl font-extrabold mb-4 tracking-tight">
+        Finance Tracker
+    </h1>
+
+    <p class="text-gray-400 text-lg max-w-xl mb-10">
+        Track your assets, expenses, and net worth with a clean, powerful dashboard.
+    </p>
+
+    <div class="flex gap-6">
+
+        <!-- Primary button -->
+        <a href="/signup"
+           class="bg-blue-500 hover:bg-blue-600 active:scale-95 
+                  transition transform 
+                  px-8 py-3 rounded-xl font-semibold text-lg shadow-lg">
+            Get Started
+        </a>
+
+        <!-- Secondary button -->
+        <a href="/login"
+           class="border border-gray-600 hover:border-gray-400 
+                  hover:bg-gray-800 active:scale-95
+                  transition transform 
+                  px-8 py-3 rounded-xl font-semibold text-lg">
+            Login
+        </a>
+
     </div>
+
 </div>
-<hr>
-    {% block content %}{% endblock %}
+
 </body>
 </html>

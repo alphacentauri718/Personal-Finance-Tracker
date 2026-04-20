@@ -1,12 +1,45 @@
+<!DOCTYPE html>
 <html>
 <head>
-    <title>Personal Finance Tracker</title>
+    <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<h1>Sign Up</h1>
 
-<form method="post">
-    <input name="email" placeholder="Email">
-    <input name="password" placeholder="Password" type="password">
-    <button type="submit">Create Account</button>
-</form>
+<body class="bg-gray-100">
+
+<div class="min-h-screen flex items-center justify-center">
+
+    <form method="post"
+          class="bg-white p-8 rounded-2xl shadow-lg w-full max-w-md">
+
+        <h2 class="text-2xl font-bold mb-6 text-center">Create Account</h2>
+
+        <input name="email"
+               type="email"
+               placeholder="Email"
+               class="w-full mb-4 p-3 border rounded-lg" />
+
+        <input name="password"
+               type="password"
+               placeholder="Password"
+               class="w-full mb-4 p-3 border rounded-lg" />
+
+        <input name="confirm_password"
+                type="password"
+                placeholder="Confirm Password"
+                class="w-full mb-4 p-3 border rounded-lg" />
+
+        <button class="w-full bg-blue-500 hover:bg-blue-600 text-white py-3 rounded-lg">
+            Sign Up
+        </button>
+
+        <p class="text-center text-sm text-gray-500 mt-4">
+            Already have an account?
+            <a href="/login" class="text-blue-500">Login</a>
+        </p>
+
+    </form>
+
+</div>
+
+</body>
 </html>
