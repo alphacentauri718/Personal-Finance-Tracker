@@ -29,11 +29,11 @@
         </tr>
     </thead>
     <tbody>
-        {% for expense in expenses %}
+        {% for asset in assets %}
         <tr class="border-t">
-            <td class="p-3">{{ expense.description }}</td>
-            <td class="p-3">{{ expense.category }}</td>
-            <td class="p-3">${{ expense.amount }}</td>
+            <td class="p-3">{{ asset.description }}</td>
+            <td class="p-3">{{ asset.category }}</td>
+            <td class="p-3">${{ asset.amount }}</td>
         </tr>
         {% endfor %}
     </tbody>
