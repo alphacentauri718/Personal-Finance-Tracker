@@ -32,12 +32,25 @@ def signup_page(request: Request):
     return templates.TemplateResponse("signup.html", {"request": request})
 
 @app.post("/signup")
-def signup(request: Request, db: Session = Depends(get_db), email: str = Form(...), password: str = Form(...)):
-    def dashboard(request: Request, db: Session = Depends(get_db)):
-        if db.query(User).filter(User.email == email).first():
-            return HTMLResponse("Email already registered", status_code=400)
+def signup(request: Request, db: Session = Depends(get_db), email: str = Form(...), password: str = Form(...), 
+           confirm_password: str = Form(...)):
+    
+    if db.query(User).filter(User.email == email).first():
+
+        return templates.TemplateResponse("signup.html", {
+            "request": request,
+            "error": "Email already registered"
+        })
+        
+        
+    if password != confirm_password:
+        return templates.TemplateResponse("signup.html", {
+            "request": request,
+            "error": "Passwords do not match"
+        })
     
     user = User(email=email, hashed_password=hash_password(password))
+    
     db.add(user)
     db.commit()
     db.refresh(user)
@@ -45,7 +58,7 @@ def signup(request: Request, db: Session = Depends(get_db), email: str = Form(..
     response = RedirectResponse(url="/dashboard", status_code=302)
     create_session(response, user.id)
     return response
-
+    
 
 @app.get("/login", response_class=HTMLResponse)
 def login_page(request: Request):

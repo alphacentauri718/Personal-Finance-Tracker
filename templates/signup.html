@@ -13,6 +13,12 @@
 
         <h2 class="text-2xl font-bold mb-6 text-center">Create Account</h2>
 
+        {% if error %}
+        <div class="bg-red-100 text-red-700 p-3 rounded-lg mb-4">
+            {{ error }}
+        </div>
+        {% endif %}
+        
         <input name="email"
                type="email"
                placeholder="Email"
@@ -21,11 +27,13 @@
         <input name="password"
                type="password"
                placeholder="Password"
+               required
                class="w-full mb-4 p-3 border rounded-lg" />
 
         <input name="confirm_password"
                 type="password"
                 placeholder="Confirm Password"
+                required
                 class="w-full mb-4 p-3 border rounded-lg" />
 
         <button class="w-full bg-blue-500 hover:bg-blue-600 text-white py-3 rounded-lg">
