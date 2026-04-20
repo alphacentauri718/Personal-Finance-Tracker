@@ -68,22 +68,14 @@ def logout():
     return response
 
 @app.get("/")
-def root(request: Request, db: Session = Depends(get_db)):
+def splash(request: Request, db: Session = Depends(get_db)):
     user = get_current_user(request, db)
 
-    if not user:
-        return templates.TemplateResponse("splash.html", {"request": request})
+    if user:
+        return RedirectResponse("/dashboard")
 
-    total_assets = sum(a.value for a in db.query(Asset).filter(Asset.user_id == user.id).all())
-    total_expenses = sum(e.amount for e in db.query(Expense).filter(Expense.user_id == user.id).all())
-    net_worth = total_assets - total_expenses
+    return templates.TemplateResponse("splash.html", {"request": request})
 
-    return templates.TemplateResponse("home.html", {
-    "request": request,
-    "total_assets": total_assets,
-    "total_expenses": total_expenses,
-    "net_worth": net_worth
-})
 
 @app.get("/dashboard", response_class=HTMLResponse)
 def dashboard(request: Request, db: Session = Depends(get_db)):
