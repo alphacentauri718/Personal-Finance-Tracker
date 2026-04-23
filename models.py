@@ -1,4 +1,5 @@
-from sqlalchemy import Column, Integer, String, Float, ForeignKey, DateTime
+from sqlalchemy import Column, Integer, String, Float, ForeignKey, Date
+from datetime import date
 from database import Base
 
 
@@ -35,4 +36,4 @@ class NetWorthSnapshot(Base):
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, ForeignKey("users.id"))
     net_worth = Column(Float)
-    timestamp = Column(DateTime)
+    timestamp = Column(Date, default = date.today())

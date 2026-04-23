@@ -12,7 +12,7 @@ from models import Base, User, Asset, Expense, NetWorthSnapshot
 
 from auth import get_current_user, create_session, hash_password, verify_password
 
-from datetime import datetime
+from datetime import date
 
 Base.metadata.create_all(bind=engine)
 
@@ -127,29 +127,12 @@ def add_asset(
     value: float = Form(...),
     db: Session = Depends(get_db)
 ):
-    
-    def calculate_net_worth(db, user_id):
-        assets = db.query(Asset).filter(Asset.user_id == user_id).all()
-        expenses = db.query(Expense).filter(Expense.user_id == user_id).all()
-
-        total_assets = sum(a.value for a in assets)
-        total_expenses = sum(e.amount for e in expenses)
-
-        return total_assets - total_expenses
 
     user = get_current_user(request, db)
     asset = Asset(name=name, type=type, value=value, user_id=user.id)
     db.add(asset)
     db.commit()
 
-    snapshot = NetWorthSnapshot(
-    user_id=user.id,
-    net_worth=calculate_net_worth(db, user.id),
-    timestamp=datetime.now()
-    )
-
-    db.add(snapshot)
-    db.commit()
     return RedirectResponse("/assets", status_code=302)
 
 @app.get("/expenses")
@@ -177,15 +160,6 @@ def add_expense(
     if not user:
         return RedirectResponse("/login")
     
-    def calculate_net_worth(db, user_id):
-        assets = db.query(Asset).filter(Asset.user_id == user_id).all()
-        expenses = db.query(Expense).filter(Expense.user_id == user_id).all()
-
-        total_assets = sum(a.value for a in assets)
-        total_expenses = sum(e.amount for e in expenses)
-
-        return total_assets - total_expenses
-    
     expense = Expense(
         description=description,  # match your model field
         category=category,
@@ -195,16 +169,45 @@ def add_expense(
     db.add(expense)
     db.commit()
 
+    return RedirectResponse("/expenses", status_code=302)
+
+def take_snapshot(db, user_id):
+    today = date.today()
+
+    # Prevent duplicates for same day
+    existing = db.query(NetWorthSnapshot).filter(
+        NetWorthSnapshot.user_id == user_id,
+        NetWorthSnapshot.timestamp == today
+    ).first()
+
+    if existing:
+        return
+
+    total_assets = sum(
+        a.value for a in db.query(Asset).filter(Asset.user_id == user_id).all()
+    )
+
+    total_expenses = sum(
+        e.amount for e in db.query(Expense).filter(Expense.user_id == user_id).all()
+    )
+
+    net_worth = total_assets - total_expenses
+
     snapshot = NetWorthSnapshot(
-    user_id=user.id,
-    net_worth=calculate_net_worth(db, user.id),
-    timestamp=datetime.now()
+        user_id=user_id,
+        timestamp=today,
+        net_worth=net_worth
     )
 
     db.add(snapshot)
     db.commit()
 
-    return RedirectResponse("/expenses", status_code=302)
+@app.post("/snapshot")
+def snapshot_all_users(db: Session = Depends(get_db)):
+    users = db.query(User).all()
+    for user in users:
+        take_snapshot(db, user.id)
+    return {"status": "ok"}
 
 @app.get("/net-worth-history")
 def net_worth_history(request: Request, db: Session = Depends(get_db)):
@@ -212,12 +215,9 @@ def net_worth_history(request: Request, db: Session = Depends(get_db)):
     if not user:
         return RedirectResponse("/login")
 
-    snapshots = db.query(NetWorthSnapshot)\
-        .filter(NetWorthSnapshot.user_id == user.id)\
-        .order_by(NetWorthSnapshot.timestamp)\
-        .all()
+    snapshots = db.query(NetWorthSnapshot).filter(NetWorthSnapshot.user_id == user.id).order_by(NetWorthSnapshot.timestamp).all()
 
-    dates = [s.timestamp.strftime("%Y-%m-%d %H:%M") for s in snapshots]
+    dates = [s.timestamp.strftime("%Y-%m-%d") for s in snapshots]
     values = [s.net_worth for s in snapshots]
 
     return templates.TemplateResponse("history.html", {
