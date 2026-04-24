@@ -18,6 +18,9 @@ from datetime import date
 
 Base.metadata.create_all(bind=engine)
 
+from dotenv import load_dotenv
+load_dotenv()
+
 app = FastAPI()
 
 
