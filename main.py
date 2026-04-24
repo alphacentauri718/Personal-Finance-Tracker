@@ -1,3 +1,5 @@
+import os
+
 from fastapi import FastAPI, Request, Form, Depends
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
@@ -202,8 +204,16 @@ def take_snapshot(db, user_id):
     db.add(snapshot)
     db.commit()
 
+CRON_SECRET = os.getenv("CRON_SECRET")
+
 @app.post("/snapshot")
-def snapshot_all_users(db: Session = Depends(get_db)):
+def snapshot_all_users(request: Request, db: Session = Depends(get_db)):
+
+    secret = request.headers.get("X-CRON-KEY")
+
+    if secret != CRON_SECRET:
+        return {"error": "unauthorized"}
+
     users = db.query(User).all()
     for user in users:
         take_snapshot(db, user.id)
