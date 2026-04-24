@@ -212,6 +212,9 @@ CRON_SECRET = os.getenv("CRON_SECRET")
 @app.post("/snapshot")
 def snapshot_all_users(request: Request, db: Session = Depends(get_db)):
 
+    print("Header:", request.headers.get("X-CRON-KEY"))
+    print("Env:", CRON_SECRET)
+    
     secret = request.headers.get("X-CRON-KEY")
 
     if secret != CRON_SECRET:
