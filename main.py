@@ -207,6 +207,10 @@ def take_snapshot(db, user_id):
     db.add(snapshot)
     db.commit()
 
+print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+print(os.getenv("CRON_SECRET"))
+print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+
 @app.post("/snapshot")
 def snapshot_all_users(request: Request, db: Session = Depends(get_db)):
 
