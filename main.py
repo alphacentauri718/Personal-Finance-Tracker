@@ -207,15 +207,11 @@ def take_snapshot(db, user_id):
     db.add(snapshot)
     db.commit()
 
-CRON_SECRET = os.getenv("CRON_SECRET")
-
 @app.post("/snapshot")
 def snapshot_all_users(request: Request, db: Session = Depends(get_db)):
 
-    print("Header:", request.headers.get("X-CRON-KEY"))
-    print("Env:", CRON_SECRET)
-    
     secret = request.headers.get("X-CRON-KEY")
+    CRON_SECRET = os.getenv("CRON_SECRET")
 
     if secret != CRON_SECRET:
         return {"error": "unauthorized"}
