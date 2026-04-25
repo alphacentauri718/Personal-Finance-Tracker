@@ -45,3 +45,18 @@ def add_expense(
     db.commit()
 
     return RedirectResponse("/expenses", status_code=302)
+
+@router.post("/expenses/delete/{expense_id}")
+def delete_expense(request: Request,expense_id: int, db: Session = Depends(get_db)):
+    
+    user = get_current_user(request, db)
+
+    expense = db.query(Expense).filter(
+        Expense.id == expense_id,
+        Expense.user_id == user.id).first()
+    if expense:
+        db.delete(expense)
+        db.commit()
+    db.close()
+
+    return RedirectResponse(url="/expenses", status_code=302)

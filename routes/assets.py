@@ -36,3 +36,19 @@ def add_asset(
     db.commit()
 
     return RedirectResponse("/assets", status_code=302)
+
+
+@router.post("/assets/delete/{asset_id}")
+def delete_asset(request: Request, asset_id: int, db: Session = Depends(get_db)):
+    
+    user = get_current_user(request, db)
+
+    asset = db.query(Asset).filter(
+        Asset.id == asset_id,
+        Asset.user_id == user.id
+    ).first()
+    if asset:
+        db.delete(asset)
+        db.commit()
+    return RedirectResponse(url="/assets", status_code=302)
+
