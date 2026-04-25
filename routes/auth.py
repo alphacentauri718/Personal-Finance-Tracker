@@ -1,3 +1,5 @@
+import os
+
 from fastapi import FastAPI, Request, Form, Depends, APIRouter
 from fastapi.responses import RedirectResponse, HTMLResponse
 from fastapi.templating import Jinja2Templates
@@ -39,7 +41,7 @@ def hash_password(password: str):
 def verify_password(password: str, hashed: str):
     return pwd_context.verify(password, hashed)
 
-SECRET_KEY = "wowsuchkey"  # Replace with a strong random value
+SECRET_KEY = os.getenv("PW_SECRET")  # Replace with a strong random value
 serializer = URLSafeSerializer(SECRET_KEY, salt="session")
 
 @router.get("/signup", response_class=HTMLResponse)
