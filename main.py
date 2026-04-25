@@ -1,28 +1,30 @@
 import os
 
 from fastapi import FastAPI, Request, Form, Depends
+
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 
 from sqlalchemy.orm import Session
 
-from passlib.context import CryptContext
-from itsdangerous import URLSafeSerializer
-
 from database import get_db, engine
 from models import Base, User, Asset, Expense, NetWorthSnapshot
-
-from auth import get_current_user, create_session, hash_password, verify_password
+from services import finance as f
+from routes import assets, expenses, auth
+from routes.auth import get_current_user
 
 from datetime import date
 
+from dotenv import load_dotenv
+
 Base.metadata.create_all(bind=engine)
 
-from dotenv import load_dotenv
 load_dotenv()
 
 app = FastAPI()
-
+app.include_router(assets.router)
+app.include_router(expenses.router)
+app.include_router(auth.router)
 
 templates = Jinja2Templates(directory="templates")
 def format_currency(value):
@@ -31,59 +33,6 @@ def format_currency(value):
     return "${:,.2f}".format(value)
 
 templates.env.filters["currency"] = format_currency
-
-@app.get("/signup", response_class=HTMLResponse)
-def signup_page(request: Request):
-    return templates.TemplateResponse("signup.html", {"request": request})
-
-@app.post("/signup")
-def signup(request: Request, db: Session = Depends(get_db), email: str = Form(...), password: str = Form(...), 
-           confirm_password: str = Form(...)):
-    
-    if db.query(User).filter(User.email == email).first():
-
-        return templates.TemplateResponse("signup.html", {
-            "request": request,
-            "error": "Email already registered"
-        })
-        
-        
-    if password != confirm_password:
-        return templates.TemplateResponse("signup.html", {
-            "request": request,
-            "error": "Passwords do not match"
-        })
-    
-    user = User(email=email, hashed_password=hash_password(password))
-    
-    db.add(user)
-    db.commit()
-    db.refresh(user)
-
-    response = RedirectResponse(url="/dashboard", status_code=302)
-    create_session(response, user.id)
-    return response
-    
-
-@app.get("/login", response_class=HTMLResponse)
-def login_page(request: Request):
-    return templates.TemplateResponse("login.html", {"request": request})
-
-@app.post("/login")
-def login(request: Request, db: Session = Depends(get_db), email: str = Form(...), password: str = Form(...)):
-    user = db.query(User).filter(User.email == email).first()
-    if not user or not verify_password(password, user.hashed_password):
-        return HTMLResponse("Invalid credentials", status_code=400)
-
-    response = RedirectResponse(url="/dashboard", status_code=302)
-    create_session(response, user.id)
-    return response
-
-@app.get("/logout")
-def logout():
-    response = RedirectResponse(url="/login")
-    response.delete_cookie("session")
-    return response
 
 @app.get("/")
 def splash(request: Request, db: Session = Depends(get_db)):
@@ -113,69 +62,6 @@ def dashboard(request: Request, db: Session = Depends(get_db)):
         "user": user
     })
 
-@app.get("/assets")
-def assets(request: Request, db: Session = Depends(get_db)):
-    user = get_current_user(request, db)
-    if not user:
-        return RedirectResponse("/login")
-    
-    assets = db.query(Asset).filter(Asset.user_id == user.id).all()
-    return templates.TemplateResponse("assets.html", {"request": request, "assets": assets})
-
-@app.post("/assets")
-
-def add_asset(
-    
-    request: Request,
-    name: str = Form(...),
-    type: str = Form(...),
-    value: float = Form(...),
-    db: Session = Depends(get_db)
-):
-
-    user = get_current_user(request, db)
-    asset = Asset(name=name, type=type, value=value, user_id=user.id)
-    db.add(asset)
-    db.commit()
-
-    return RedirectResponse("/assets", status_code=302)
-
-@app.get("/expenses")
-def expenses(request: Request, db: Session = Depends(get_db)):
-    user = get_current_user(request, db)
-    if not user:
-        return RedirectResponse("/login")
-    
-    expenses_list = db.query(Expense).filter(Expense.user_id == user.id).all()
-
-    return templates.TemplateResponse(
-        "expenses.html",
-        {"request": request, "expenses": expenses_list}
-    )
-
-@app.post("/expenses")
-def add_expense(
-    request: Request,
-    description: str = Form(...),
-    category: str = Form(...),
-    amount: float = Form(...),
-    db: Session = Depends(get_db)
-):
-    user = get_current_user(request, db)
-    if not user:
-        return RedirectResponse("/login")
-    
-    expense = Expense(
-        description=description,  # match your model field
-        category=category,
-        amount=amount,
-        user_id=user.id
-    )
-    db.add(expense)
-    db.commit()
-
-    return RedirectResponse("/expenses", status_code=302)
-
 def take_snapshot(db, user_id):
     today = date.today()
 
@@ -188,15 +74,7 @@ def take_snapshot(db, user_id):
     if existing:
         return
 
-    total_assets = sum(
-        a.value for a in db.query(Asset).filter(Asset.user_id == user_id).all()
-    )
-
-    total_expenses = sum(
-        e.amount for e in db.query(Expense).filter(Expense.user_id == user_id).all()
-    )
-
-    net_worth = total_assets - total_expenses
+    net_worth = f.calculate_net_worth(user_id)
 
     snapshot = NetWorthSnapshot(
         user_id=user_id,
