@@ -4,7 +4,6 @@ from fastapi.templating import Jinja2Templates
 from database import get_db
 from sqlalchemy.orm import Session
 
-from routes import auth
 from routes.auth import get_current_user
 from models import Asset
 
