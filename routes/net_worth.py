@@ -5,8 +5,7 @@ from sqlalchemy.orm import Session
 from fastapi.responses import RedirectResponse
 from fastapi.templating import Jinja2Templates
 
-from models import NetWorthSnapshot, User
-from services import finance as f
+from models import NetWorthSnapshot, User, Asset, Expense
 from database import get_db
 from routes.auth import get_current_user
 
@@ -15,7 +14,7 @@ from datetime import date
 router = APIRouter()
 templates = Jinja2Templates(directory="templates")
 
-def take_snapshot(user_id, db: Session = Depends(get_db)):
+def take_snapshot(user_id, db):
     today = date.today()
 
     # Prevent duplicates for same day
@@ -27,7 +26,11 @@ def take_snapshot(user_id, db: Session = Depends(get_db)):
     if existing:
         return
 
-    net_worth = f.calculate_net_worth(user_id)
+    total_assets = sum(a.value for a in db.query(Asset).filter(Asset.user_id == user_id).all())
+
+    total_expenses = sum(e.amount for e in db.query(Expense).filter(Expense.user_id == user_id).all())
+
+    net_worth = total_assets - total_expenses
 
     snapshot = NetWorthSnapshot(
         user_id=user_id,
@@ -49,7 +52,7 @@ def snapshot_all_users(request: Request, db: Session = Depends(get_db)):
 
     users = db.query(User).all()
     for user in users:
-        take_snapshot(db, user.id)
+        take_snapshot(user.id, db)
     return {"status": "ok"}
 
 @router.get("/net-worth-history")
