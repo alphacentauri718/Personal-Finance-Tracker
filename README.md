@@ -9,6 +9,8 @@ A full-stack web application for tracking personal finances, including assets, e
 - Asset and expense tracking
 - Real-time net worth calculation
 - Historical net worth visualization
+- Banking integration through Plaid API
+- Nightly CRON job to update net worth and sync with Plaid
 
 ## Tech Stack
 - Backend: FastAPI (Python)
