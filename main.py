@@ -4,6 +4,7 @@ from fastapi import FastAPI
 from database import engine
 from models import Base
 from routes import assets, expenses, auth, dashboard, net_worth, splash
+from services import plaid
 
 from dotenv import load_dotenv
 
@@ -18,6 +19,7 @@ app.include_router(auth.router)
 app.include_router(dashboard.router)
 app.include_router(net_worth.router)
 app.include_router(splash.router)
+app.include_router(plaid.router)
 
 
 

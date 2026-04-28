@@ -21,4 +21,29 @@
     </div>
 
 </div>
+
+<script src="https://cdn.plaid.com/link/v2/stable/link-initialize.js"></script>
+
+<button id="link-button">Connect Bank</button>
+
+<script>
+document.getElementById('link-button').onclick = async () => {
+
+    const res = await fetch('/plaid/link-token', { method: 'POST' });
+    const data = await res.json();
+
+    const handler = Plaid.create({
+        token: data.link_token,
+        onSuccess: async function(public_token) {
+            await fetch('/plaid/exchange-token', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ public_token })
+            });
+        }
+    });
+
+    handler.open();
+};
+</script>
 {% endblock %}

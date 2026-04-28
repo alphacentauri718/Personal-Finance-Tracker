@@ -15,7 +15,7 @@ from datetime import date
 router = APIRouter()
 templates = Jinja2Templates(directory="templates")
 
-def take_snapshot(db, user_id):
+def take_snapshot(user_id, db: Session = Depends(get_db)):
     today = date.today()
 
     # Prevent duplicates for same day

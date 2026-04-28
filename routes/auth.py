@@ -19,7 +19,7 @@ def create_session(response, user_id: int):
     token = serializer.dumps({"user_id": user_id})
     response.set_cookie(key="session", value=token, httponly=True)
 
-def get_current_user(request: Request, db: Session):
+def get_current_user(request: Request, db: Session = Depends(get_db)):
     token = request.cookies.get("session")
     if not token:
         print("No session cookie found")
