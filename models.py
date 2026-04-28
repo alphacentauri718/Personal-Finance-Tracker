@@ -11,7 +11,7 @@ class User(Base):
     hashed_password = Column(String)
     plaid_access_token = Column(String, nullable=True)
     has_synced = Column(Boolean, default=False)
-
+    sync_daily = Column(Boolean, default=False)
 
 class Asset(Base):
     __tablename__ = "assets"

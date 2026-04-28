@@ -133,3 +133,13 @@ def sync_plaid(
     user.has_synced = True
     db.commit()
     return RedirectResponse("/dashboard", status_code=302)
+
+@router.post("/toggle-daily-sync")
+def toggle_daily_sync(
+    db: Session = Depends(get_db),
+    user = Depends(get_current_user)
+):
+    user.sync_daily = not user.sync_daily
+    db.commit()
+
+    return RedirectResponse("/dashboard", status_code=302)

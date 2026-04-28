@@ -8,6 +8,7 @@ from fastapi.templating import Jinja2Templates
 from models import NetWorthSnapshot, User, Asset, Expense
 from database import get_db
 from routes.auth import get_current_user
+from services.plaid import sync_transactions
 
 from datetime import date
 
@@ -49,10 +50,21 @@ def snapshot_all_users(request: Request, db: Session = Depends(get_db)):
 
     if secret != CRON_SECRET:
         return {"error": "unauthorized"}
+    
+    users = db.query(User).filter(User.sync_daily == True).all()
 
+    for user in users:
+        if user.plaid_access_token:
+            sync_transactions(db, user)
+            print(f"Syncing user {user.id}")
+    print("Syncing done")
+    
     users = db.query(User).all()
     for user in users:
         take_snapshot(user.id, db)
+        print(f"Taking snapshot of {user.id}")
+    print("Snapshots done")
+
     return {"status": "ok"}
 
 @router.get("/net-worth-history")
