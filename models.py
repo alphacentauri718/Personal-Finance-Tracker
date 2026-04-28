@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Float, ForeignKey, Date
+from sqlalchemy import Column, Integer, String, Float, ForeignKey, Date, Boolean
 from datetime import date
 from database import Base
 
@@ -10,6 +10,7 @@ class User(Base):
     email = Column(String, unique=True, index=True)
     hashed_password = Column(String)
     plaid_access_token = Column(String, nullable=True)
+    has_synced = Column(Boolean, default=False)
 
 
 class Asset(Base):
@@ -20,6 +21,7 @@ class Asset(Base):
     type = Column(String)
     value = Column(Float)
     user_id = Column(Integer, ForeignKey("users.id"))
+    plaid_transaction_id = Column(String, unique=True, nullable=True)
 
 
 class Expense(Base):
@@ -30,6 +32,7 @@ class Expense(Base):
     category = Column(String)
     amount = Column(Float)
     user_id = Column(Integer, ForeignKey("users.id"))
+    plaid_transaction_id = Column(String, unique=True, nullable=True)
 
 class NetWorthSnapshot(Base):
     __tablename__ = "net_worth_snapshots"

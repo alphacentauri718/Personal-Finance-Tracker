@@ -35,7 +35,7 @@
         <tr class="border-t">
             <td class="p-3">{{ asset.name }}</td>
             <td class="p-3">{{ asset.type }}</td>
-            <td class="p-3">${{ asset.value }}</td>
+            <td class="p-3">${{ "{:,.2f}".format(asset.value) }}</td>
             <td class="p-3 text-right">
                 <form method="post" action="/assets/delete/{{ asset.id }}">
                     <button 

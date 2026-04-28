@@ -5,26 +5,53 @@
 
     <div class="bg-white p-6 rounded-2xl shadow">
         <h3 class="text-gray-500">Total Assets</h3>
-        <p class="text-2xl font-bold">${{ total_assets }}</p>
+        <p class="text-2xl font-bold">${{ "{:,.2f}".format(total_assets) }}</p>
     </div>
 
     <div class="bg-white p-6 rounded-2xl shadow">
         <h3 class="text-gray-500">Total Expenses</h3>
-        <p class="text-2xl font-bold">${{ total_expenses }}</p>
+        <p class="text-2xl font-bold">${{ "{:,.2f}".format(total_expenses) }}</p>
     </div>
 
     <div class="bg-white p-6 rounded-2xl shadow">
         <h3 class="text-gray-500">Net Worth</h3>
+        {% if net_worth >= 0 %}
         <p class="text-2xl font-bold text-green-600">
-            ${{ net_worth }}
+            ${{ "{:,.2f}".format(net_worth) }}
         </p>
+        {% else %}
+        <p class="text-2xl font-bold text-red-600">
+            ${{ "{:,.2f}".format(net_worth) }}
+        </p>
+        {% endif %}
     </div>
 
 </div>
 
 <script src="https://cdn.plaid.com/link/v2/stable/link-initialize.js"></script>
 
-<button id="link-button">Connect Bank</button>
+{% if not user.plaid_access_token %}
+<div class="flex justify-center mt-8">
+    <button id="link-button"
+        class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-xl shadow">
+        Connect Bank
+    </button>
+</div>
+
+{% elif not user.has_synced %}
+<div class="flex justify-center mt-8">
+    <form method="post" action="/plaid/sync">
+        <button
+            class="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-xl shadow">
+            Sync Transactions
+        </button>
+    </form>
+</div>
+{% else %}
+    <div class="text-center mt-8 text-green-400 font-semibold">
+        ✔ Bank Connected & Synced
+    </div>
+{% endif %}
 
 <script>
 document.getElementById('link-button').onclick = async () => {
