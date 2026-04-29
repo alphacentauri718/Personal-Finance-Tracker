@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Float, ForeignKey, Date, Boolean
+from sqlalchemy import Column, Integer, String, Float, ForeignKey, Date, Boolean, DateTime
 from datetime import date
 from database import Base
 
@@ -12,6 +12,7 @@ class User(Base):
     plaid_access_token = Column(String, nullable=True)
     has_synced = Column(Boolean, default=False)
     sync_daily = Column(Boolean, default=False)
+    last_synced = Column(DateTime, nullable=True)
 
 class Asset(Base):
     __tablename__ = "assets"

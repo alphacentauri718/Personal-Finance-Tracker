@@ -93,6 +93,7 @@ def sync_transactions(db, user):
 
 
     db.commit()
+    user.last_synced = datetime.now()
 
 @router.post("/plaid/link-token")
 def create_link_token(user=Depends(get_current_user)):
@@ -122,7 +123,7 @@ def exchange_token(data: TokenRequest, db: Session = Depends(get_db), user=Depen
     user.plaid_access_token = access_token
     db.commit()
 
-    return {"status": "ok"}
+    return RedirectResponse("/dashboard", status_code=302)
 
 @router.post("/plaid/sync")
 def sync_plaid(

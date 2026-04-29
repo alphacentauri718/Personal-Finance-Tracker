@@ -65,6 +65,26 @@
     </div>
 {% endif %}
 
+<div class="text-center mt-4 text-sm text-gray-400">
+    {% if user.last_synced %}
+        Last sync: {{ user.last_synced.strftime("%b %d, %Y %I:%M %p") }}
+    {% else %}
+        Not synced yet
+    {% endif %}
+</div>
+
+<div class="flex justify-center mt-8">
+    {% if user.last_synced %}
+    <form method="post" action="/plaid/sync">
+        <button
+            class="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-xl shadow">
+            Sync Now
+        </button>
+    </form>
+    {% endif %}
+</div>
+
+{% if not user.plaid_access_token %}
 <div class="flex justify-center mt-8">
     <div class="bg-gray-900 text-white p-6 rounded-2xl shadow max-w-md text-center">
         <p class="text-lg font-semibold mb-2">
@@ -72,6 +92,9 @@
         </p>
         <p class="text-gray-400">
             Access the sandbox account using:
+        </p>
+        <p class="mt-3 font-mono text-blue-400">
+            Bank: Chase
         </p>
         <p class="mt-3 font-mono text-blue-400">
             Username: user_good
@@ -84,6 +107,7 @@
         </p>
     </div>
 </div>
+{% endif %}
 
 <script>
 document.getElementById('link-button').onclick = async () => {
@@ -99,6 +123,7 @@ document.getElementById('link-button').onclick = async () => {
                 headers: {'Content-Type': 'application/json'},
                 body: JSON.stringify({ public_token })
             });
+            window.location.href = "/dashboard";
         }
     });
 
