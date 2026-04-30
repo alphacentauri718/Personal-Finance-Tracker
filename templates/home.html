@@ -84,6 +84,28 @@
     {% endif %}
 </div>
 
+{% if user.accounts|length >= 2 %}
+{% if user.last_synced %}
+<div class="mt-6">
+    <form method="get" action="/dashboard" class="flex items-center gap-4 flex-wrap">
+        
+        {% for account in user.accounts %}
+            <label class="flex items-center gap-2">
+                <input type="checkbox" name="account_ids" value="{{ account.id }}"
+                    {% if account.id|string in selected_accounts %}checked{% endif %}>
+                {{ account.name }}
+            </label>
+        {% endfor %}
+
+        <button class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded">
+            Apply
+        </button>
+
+    </form>
+</div>
+{% endif %}
+{% endif %}
+
 {% if not user.plaid_access_token %}
 <div class="flex justify-center mt-8">
     <div class="bg-gray-900 text-white p-6 rounded-2xl shadow max-w-md text-center">

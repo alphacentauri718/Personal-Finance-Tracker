@@ -12,9 +12,10 @@ from plaid.model.country_code import CountryCode
 from plaid.model.item_public_token_exchange_request import ItemPublicTokenExchangeRequest
 from plaid.model.transactions_get_request import TransactionsGetRequest
 from datetime import datetime, timedelta
+from plaid.model.accounts_get_request import AccountsGetRequest
 
 from routes.auth import get_current_user
-from models import Expense, Asset
+from models import Expense, Asset, Account
 
 from database import get_db
 
@@ -51,48 +52,53 @@ def sync_transactions(db, user):
     if not user.plaid_access_token:
         return
 
-    transactions = fetch_transactions(user.plaid_access_token)
+    for account in user.accounts:
+        
+        transactions = fetch_transactions(user.plaid_access_token)
 
-    for t in transactions:
+        for t in transactions:
 
-        #Deduplication check
-        if t["amount"] > 0:
-            existing = db.query(Expense).filter(
-                Expense.plaid_transaction_id == t["transaction_id"]
-            ).first()
+            #Deduplication check
+            if t["amount"] > 0:
+                existing = db.query(Expense).filter(
+                    Expense.plaid_transaction_id == t["transaction_id"]
+                ).first()
 
-            if existing:
-                continue  # skip duplicates
+                if existing:
+                    continue  # skip duplicates
 
-            expense = Expense(
-                description=t["name"],
-                category=t["category"][0] if t["category"] else "Other",
-                amount=t["amount"],
-                user_id=user.id,
-                plaid_transaction_id=t["transaction_id"]
-            )
+                expense = Expense(
+                    description=t["name"],
+                    category=t["category"][0] if t["category"] else "Other",
+                    amount=t["amount"],
+                    user_id=user.id,
+                    plaid_transaction_id=t["transaction_id"],
+                    plaid_account_id = account.plaid_account_id
+                )
 
-            db.add(expense)
-        else:
-            existing = db.query(Asset).filter(
-                Asset.plaid_transaction_id == t["transaction_id"]
-            ).first()
+                db.add(expense)
+                db.commit()
+            else:
+                existing = db.query(Asset).filter(
+                    Asset.plaid_transaction_id == t["transaction_id"]
+                ).first()
 
-            if existing:
-                continue  # skip duplicates
+                if existing:
+                    continue  # skip duplicates
 
-            asset = Asset(
-                name=t["name"],
-                type=t["category"][0] if t["category"] else "Other",
-                value=abs(t["amount"]),
-                user_id=user.id,
-                plaid_transaction_id=t["transaction_id"]
-            )
+                asset = Asset(
+                    name=t["name"],
+                    type=t["category"][0] if t["category"] else "Other",
+                    value=abs(t["amount"]),
+                    user_id=user.id,
+                    plaid_transaction_id=t["transaction_id"],
+                    plaid_account_id = account.plaid_account_id
+                )
 
-            db.add(asset)
+                db.add(asset)
+                db.commit()
 
-
-    db.commit()
+    
     user.last_synced = datetime.now()
 
 @router.post("/plaid/link-token")
@@ -119,7 +125,26 @@ def exchange_token(data: TokenRequest, db: Session = Depends(get_db), user=Depen
     response = client.item_public_token_exchange(request)
 
     access_token = response["access_token"]
+    item_id = response["item_id"]
 
+    accounts_response = client.accounts_get(
+        AccountsGetRequest(access_token=access_token)
+    )
+    print(accounts_response["accounts"])
+    for acct in accounts_response["accounts"]:
+        print("starting acct")
+        account = Account(
+            user_id=user.id,
+            plaid_access_token=access_token,
+            item_id=item_id,
+            plaid_account_id=acct["account_id"],
+            name=acct["name"],
+            account_type=acct.type.value,
+            subtype=acct.subtype.value if acct.subtype else None
+        )
+
+        db.add(account)
+    
     user.plaid_access_token = access_token
     db.commit()
 

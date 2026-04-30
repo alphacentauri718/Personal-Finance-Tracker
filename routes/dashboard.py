@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Request, Depends
+from fastapi import APIRouter, Request, Depends, Query
 from fastapi.responses import RedirectResponse, HTMLResponse
 from fastapi.templating import Jinja2Templates
 from database import get_db
@@ -9,16 +9,27 @@ from models import Asset
 from models import Expense
 
 templates = Jinja2Templates(directory="templates")
-router = APIRouter()
+router = APIRouter()   
 
 @router.get("/dashboard", response_class=HTMLResponse)
-def dashboard(request: Request, db: Session = Depends(get_db)):
+def dashboard(
+    request: Request,
+    db: Session = Depends(get_db),
+    user = Depends(get_current_user)
+):
     user = get_current_user(request, db)
     if not user:
         return RedirectResponse("/login")
+    
+    query_expenses = db.query(Expense).filter(Expense.user_id == user.id)
+    query_assets = db.query(Asset).filter(Asset.user_id == user.id)
 
-    total_assets = sum(a.value for a in db.query(Asset).filter(Asset.user_id == user.id).all())
-    total_expenses = sum(e.amount for e in db.query(Expense).filter(Expense.user_id == user.id).all())
+    expenses = query_expenses.all()
+    assets = query_assets.all()
+    
+    total_assets = sum(a.value for a in assets)
+    total_expenses = sum(e.amount for e in expenses)
+
     net_worth = total_assets - total_expenses
 
     return templates.TemplateResponse("home.html", {
