@@ -1,5 +1,6 @@
 from sqlalchemy import Column, Integer, String, Float, ForeignKey, Date, Boolean, DateTime
 from sqlalchemy.orm import relationship
+from sqlalchemy.dialects.postgresql import JSON
 from datetime import date
 from database import Base
 
@@ -62,3 +63,15 @@ class Account(Base):
     subtype = Column(String)
 
     user = relationship("User", back_populates="accounts")
+
+class SavedView(Base):
+    __tablename__ = "saved_views"
+
+    id = Column(Integer, primary_key=True)
+    user_id = Column(Integer, ForeignKey("users.id"))
+    name = Column(String)
+
+    # store selected accounts as JSON
+    account_ids = Column(JSON)
+
+    user = relationship("User")

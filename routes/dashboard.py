@@ -5,8 +5,7 @@ from database import get_db
 from sqlalchemy.orm import Session
 
 from routes.auth import get_current_user
-from models import Asset
-from models import Expense
+from models import Asset, Expense, SavedView, Account
 
 templates = Jinja2Templates(directory="templates")
 router = APIRouter()   
@@ -20,13 +19,14 @@ def dashboard(
     user = get_current_user(request, db)
     if not user:
         return RedirectResponse("/login")
-    
+
     query_expenses = db.query(Expense).filter(Expense.user_id == user.id)
     query_assets = db.query(Asset).filter(Asset.user_id == user.id)
 
+
     expenses = query_expenses.all()
     assets = query_assets.all()
-    
+
     total_assets = sum(a.value for a in assets)
     total_expenses = sum(e.amount for e in expenses)
 
@@ -39,3 +39,73 @@ def dashboard(
         "net_worth": net_worth,
         "user": user
     })
+
+@router.post("/views/save")
+def save_view(
+    data: dict,
+    db: Session = Depends(get_db),
+    user = Depends(get_current_user)
+):
+    view = SavedView(
+        user_id=user.id,
+        name=data["name"],
+        plaid_account_ids=data["plaid_account_ids"]
+    )
+
+    db.add(view)
+    db.commit()
+
+    return {"status": "ok"}
+
+@router.post("/dashboard-data")
+def dashboard_data(
+    data: dict,
+    db: Session = Depends(get_db),
+    user = Depends(get_current_user)
+):
+    ids = data.get("account_ids", [])
+
+    # get accounts
+    accounts = db.query(Account).filter(
+    Account.id.in_(ids),
+    Account.user_id == user.id
+    ).all()
+    
+    #get plaid_account_ids
+    plaid_account_ids = [
+    acct.plaid_account_id
+    for acct in accounts
+    ]
+
+    #query asset and expenses tables
+    expenses = db.query(Expense).filter(
+    Expense.user_id == user.id,
+    Expense.plaid_account_id.in_(plaid_account_ids)
+    ).all()
+    
+    assets = db.query(Asset).filter(
+    Asset.user_id == user.id,
+    Asset.plaid_account_id.in_(plaid_account_ids)
+    ).all()
+
+    total_expenses = sum(e.amount for e in expenses)
+    total_assets = sum(a.value for a in assets)
+    net_worth = total_assets - total_expenses
+    
+    return{
+        "total_expenses": total_expenses,
+        "expenses": [
+            {
+                "description": e.description,
+                "amount": float(e.amount)
+            } for e in expenses
+        ],
+        "total_assets": total_assets,
+        "assets": [
+            {
+                "description": a.name,
+                "amount": float(a.value)
+            } for a in assets
+        ],
+        "net_worth": net_worth
+    }

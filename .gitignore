@@ -10,6 +10,9 @@ venv/
 # Environment variables
 .env
 
+#SQL
+*.sql
+
 # VS Code / IDE
 .vscode/
 .idea/

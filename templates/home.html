@@ -3,17 +3,17 @@
 {% block content %}
 <div class="grid grid-cols-3 gap-6">
 
-    <div class="bg-white p-6 rounded-2xl shadow">
+    <div id="total-assets" class="bg-white p-6 rounded-2xl shadow">
         <h3 class="text-gray-500">Total Assets</h3>
         <p class="text-2xl font-bold">${{ "{:,.2f}".format(total_assets) }}</p>
     </div>
 
-    <div class="bg-white p-6 rounded-2xl shadow">
+    <div id="total-expenses" class="bg-white p-6 rounded-2xl shadow">
         <h3 class="text-gray-500">Total Expenses</h3>
         <p class="text-2xl font-bold">${{ "{:,.2f}".format(total_expenses) }}</p>
     </div>
 
-    <div class="bg-white p-6 rounded-2xl shadow">
+    <div id="net-worth" class="bg-white p-6 rounded-2xl shadow">
         <h3 class="text-gray-500">Net Worth</h3>
         {% if net_worth >= 0 %}
         <p class="text-2xl font-bold text-green-600">
@@ -37,6 +37,28 @@
         Connect Bank
     </button>
 </div>
+
+<script>
+    document.getElementById('link-button').onclick = async () => {
+
+        const res = await fetch('/plaid/link-token', { method: 'POST' });
+        const data = await res.json();
+
+        const handler = Plaid.create({
+            token: data.link_token,
+            onSuccess: async function(public_token) {
+                await fetch('/plaid/exchange-token', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ public_token })
+                });
+                window.location.href = "/dashboard";
+            }
+        });
+
+        handler.open();
+    };
+</script>
 
 {% elif not user.has_synced %}
 <div class="flex justify-center mt-8">
@@ -86,22 +108,20 @@
 
 {% if user.accounts|length >= 2 %}
 {% if user.last_synced %}
-<div class="mt-6">
-    <form method="get" action="/dashboard" class="flex items-center gap-4 flex-wrap">
-        
-        {% for account in user.accounts %}
-            <label class="flex items-center gap-2">
-                <input type="checkbox" name="account_ids" value="{{ account.id }}"
-                    {% if account.id|string in selected_accounts %}checked{% endif %}>
-                {{ account.name }}
-            </label>
-        {% endfor %}
+<div class="mt-4">
+    <button onclick="openAccountModal()"
+        class="bg-gray-700 hover:bg-gray-800 text-white px-4 py-2 rounded-lg">
+        Toggle Accounts
+    </button>
+</div>
 
-        <button class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded">
-            Apply
-        </button>
-
-    </form>
+<div class="mt-4 flex gap-2">
+    {% for view in saved_views %}
+        <a href="/dashboard?{% for id in view.account_ids %}account_ids={{ id }}&{% endfor %}"
+           class="bg-blue-600 text-white px-3 py-1 rounded">
+            {{ view.name }}
+        </a>
+    {% endfor %}
 </div>
 {% endif %}
 {% endif %}
@@ -131,25 +151,84 @@
 </div>
 {% endif %}
 
-<script>
-document.getElementById('link-button').onclick = async () => {
 
-    const res = await fetch('/plaid/link-token', { method: 'POST' });
-    const data = await res.json();
+<div id="accountModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
 
-    const handler = Plaid.create({
-        token: data.link_token,
-        onSuccess: async function(public_token) {
-            await fetch('/plaid/exchange-token', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({ public_token })
-            });
-            window.location.href = "/dashboard";
-        }
-    });
+    <div class="bg-white rounded-2xl shadow-xl p-6 w-[500px]">
 
-    handler.open();
-};
-</script>
+        <h2 class="text-xl font-bold mb-4">
+            Select Accounts
+        </h2>
+
+        <!-- Account Pills -->
+        <div id="accountPills" class="flex flex-wrap gap-2">
+
+            {% for account in user.accounts %}
+
+                <button
+                    type="button"
+
+                    class="pill px-4 py-2 rounded-full border text-sm
+                           bg-blue-600 text-white border-blue-600
+                           transition duration-150 hover:scale-105"
+
+                    data-id="{{ account.id }}"
+                    data-name="{{ account.name }}"
+                    data-type="{{ account.type }}"
+                    data-subtype="{{ account.subtype }}">
+
+                    {{ account.name }}
+
+                </button>
+
+            {% endfor %}
+
+        </div>
+
+        <!-- Action Buttons -->
+        <div id="actionButtons" class="hidden mt-6 flex gap-3">
+
+            <button
+                onclick="applyFilter()"
+                class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg">
+
+                Apply
+
+            </button>
+
+            <button
+                onclick="showSaveView()"
+                class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg">
+
+                Save View
+
+            </button>
+
+        </div>
+
+        <!-- Save View UI -->
+        <div id="saveViewSection" class="hidden mt-4">
+
+            <input
+                id="viewName"
+                type="text"
+                placeholder="View name"
+                class="w-full border rounded-lg p-2 mb-3">
+
+            <button
+                onclick="saveView()"
+                class="bg-green-700 hover:bg-green-800 text-white px-4 py-2 rounded-lg">
+
+                Save
+
+            </button>
+
+        </div>
+
+    </div>
+</div>
+
+
+
+<script src="/static/js/home.js"></script>
 {% endblock %}
