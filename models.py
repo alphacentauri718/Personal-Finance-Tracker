@@ -18,6 +18,8 @@ class User(Base):
 
     accounts = relationship("Account", back_populates="user")
 
+    saved_views = relationship("SavedView",back_populates="user",cascade="all, delete-orphan")
+
 class Asset(Base):
     __tablename__ = "assets"
 
@@ -65,13 +67,12 @@ class Account(Base):
     user = relationship("User", back_populates="accounts")
 
 class SavedView(Base):
+
     __tablename__ = "saved_views"
 
     id = Column(Integer, primary_key=True)
-    user_id = Column(Integer, ForeignKey("users.id"))
-    name = Column(String)
-
-    # store selected accounts as JSON
-    account_ids = Column(JSON)
-
-    user = relationship("User")
+    user_id = Column(Integer,ForeignKey("users.id"),nullable=False)
+    name = Column(String,nullable=False)
+    account_ids = Column(JSON,nullable=False)
+    
+    user = relationship("User",back_populates="saved_views")

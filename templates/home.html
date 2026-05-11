@@ -166,12 +166,12 @@
 
         </button>
 
-        <h2 class="text-xl font-bold mb-4">
+        <h2 id= "accountsHeader" class="text-xl font-bold mb-4">
             Select Accounts
         </h2>
 
         <!-- Account Pills -->
-        <div id="accountPills" class="flex flex-wrap gap-2">
+        <div id="hidden accountPills" class="flex flex-wrap gap-2">
 
             {% for account in user.accounts %}
 
@@ -194,7 +194,57 @@
             {% endfor %}
 
         </div>
+        <h2 id="viewsHeader" class="hidden text-xl font-bold mb-4">
+            Select a View
+        </h2>
 
+        <!-- View buttons -->
+        <div id="viewButtons" class="hidden flex flex-wrap gap-2">
+
+            {% for view in user.saved_views %}
+
+                <button
+                    onclick='applyFilter({{ view.account_ids | tojson }})'
+                    class="relative bg-gray-700 text-white px-4 py-2 rounded-full">
+
+                    {{ view.name }}
+
+                    <span
+                        onclick="event.stopPropagation(); deleteView({{ view.id }})"
+                        class="absolute -top-1 -right-1
+                            bg-red-500 hover:bg-red-600
+                            text-white text-xs font-bold
+                            w-5 h-5
+                            rounded-full
+                            flex items-center justify-center
+                            cursor-pointer">
+
+                        ×
+
+                    </span>
+
+                </button>
+
+            {% endfor %}
+        </div>
+        <div id="savedViewButton" class="mt-6 flex gap-3">
+            <button
+                onclick="openViews()"
+                class="bg-green-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg">
+
+                See saved views
+
+            </button>
+        </div>
+        <div id="backToAccountsButton" class="hidden mt-6 flex gap-3">
+            <button
+                onclick="back2accounts()"
+                class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg">
+
+                Back to accounts
+
+            </button>
+        </div>
         <!-- Action Buttons -->
         <div id="actionButtons" class="hidden mt-6 flex gap-3">
 

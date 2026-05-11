@@ -88,6 +88,71 @@ function openAccountModal() {
         .classList.remove("hidden");
 }
 
+// ==========================================
+// Open views
+// ==========================================
+
+function openViews() {
+    
+    document
+        .getElementById("accountsHeader")
+        .classList.add("hidden");
+
+    document
+        .getElementById("hidden accountPills")
+        .classList.add("hidden");
+
+    document
+        .getElementById("viewsHeader")
+        .classList.remove("hidden");
+
+    document
+        .getElementById("viewButtons")
+        .classList.remove("hidden");
+
+    document
+        .getElementById("savedViewButton")
+        .classList.add("hidden");
+
+    document
+        .getElementById("backToAccountsButton")
+        .classList.remove("hidden");
+
+    document
+        .getElementById("actionButtons")
+        .classList.add("hidden");
+}
+// ==========================================
+// Back to accounts
+// ==========================================
+
+function back2accounts() {
+
+    document
+        .getElementById("accountsHeader")
+        .classList.remove("hidden");
+
+    document
+        .getElementById("hidden accountPills")
+        .classList.remove("hidden");
+
+    document
+        .getElementById("viewButtons")
+        .classList.add("hidden");
+
+    document
+        .getElementById("viewsHeader")
+        .classList.add("hidden");
+
+    document
+        .getElementById("savedViewButton")
+        .classList.remove("hidden");
+
+    document
+        .getElementById("backToAccountsButton")
+        .classList.add("hidden");
+
+}
 
 // ==========================================
 // Close modal
@@ -105,13 +170,21 @@ function closeAccountModal() {
 // Apply filter
 // ==========================================
 
-async function applyFilter() {
+async function applyFilter(savedViewIds = null) {
+
+    // Decide where account IDs come from
+    const accountIds = savedViewIds
+        ? savedViewIds
+        : Array.from(selectedAccounts);
+
 
     // Prevent empty selection
-    if (selectedAccounts.size === 0) {
+    if (accountIds.length === 0) {
+
         alert("Select at least one account");
         return;
     }
+
 
     const response = await fetch("/dashboard-data", {
 
@@ -122,16 +195,14 @@ async function applyFilter() {
         },
 
         body: JSON.stringify({
-            account_ids: Array.from(selectedAccounts)
+            account_ids: accountIds
         })
     });
 
     const data = await response.json();
 
-    // Update dashboard UI
     updateDashboard(data);
 
-    // Close modal
     closeAccountModal();
 }
 
