@@ -152,9 +152,19 @@
 {% endif %}
 
 
-<div id="accountModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
+<div id="accountModal"
+     class="hidden fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
 
-    <div class="bg-white rounded-2xl shadow-xl p-6 w-[500px]">
+    <div class="bg-white rounded-2xl shadow-xl p-6 w-[500px] relative">
+
+        <!-- Close Button -->
+        <button
+            onclick="closeAccountModal()"
+            class="absolute top-3 right-3 text-gray-500 hover:text-black text-2xl font-bold">
+
+            &times;
+
+        </button>
 
         <h2 class="text-xl font-bold mb-4">
             Select Accounts

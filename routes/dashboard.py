@@ -49,7 +49,7 @@ def save_view(
     view = SavedView(
         user_id=user.id,
         name=data["name"],
-        plaid_account_ids=data["plaid_account_ids"]
+        account_ids=data["account_ids"]
     )
 
     db.add(view)
@@ -97,6 +97,7 @@ def dashboard_data(
         "expenses": [
             {
                 "description": e.description,
+                "category": e.category,
                 "amount": float(e.amount)
             } for e in expenses
         ],
@@ -104,6 +105,7 @@ def dashboard_data(
         "assets": [
             {
                 "description": a.name,
+                "category": a.type,
                 "amount": float(a.value)
             } for a in assets
         ],
