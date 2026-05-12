@@ -57,6 +57,20 @@ def save_view(
 
     return {"status": "ok"}
 
+@router.post("/views/delete/{view_id}")
+def delete_view(
+    view_id: int,
+    db: Session = Depends(get_db),
+    user = Depends(get_current_user)
+):
+    view = db.query(SavedView).filter(SavedView.id == view_id, SavedView.user_id == user.id).first()
+
+    if view:
+        db.delete(view)
+        db.commit()
+
+    return {"success": "true"}
+
 @router.post("/dashboard-data")
 def dashboard_data(
     data: dict,

@@ -170,6 +170,27 @@ function closeAccountModal() {
 // Apply filter
 // ==========================================
 
+
+async function deleteView(viewId) {
+
+    if (!confirm("Delete this view?")) {
+    return;
+    }
+    const response = await fetch(`/views/delete/${viewId}`, {
+
+        method: "POST"
+    });
+
+    if (response.ok) {
+
+        // Remove pill from page instantly
+        document
+            .getElementById(`view-pill-${viewId}`)
+            .remove();
+    }
+}
+
+
 async function applyFilter(savedViewIds = null) {
 
     // Decide where account IDs come from
