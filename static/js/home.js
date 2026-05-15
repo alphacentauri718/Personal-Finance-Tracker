@@ -22,6 +22,54 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 });
 
+// ==========================================
+// Additional bank account button
+// ==========================================
+const addBankButton =
+    document.getElementById("additional-accounts-button");
+
+if (addBankButton) {
+
+    addBankButton.onclick = async () => {
+
+        // Get link token
+        const res = await fetch("/plaid/link-token", {
+
+            method: "POST"
+        });
+
+        const data = await res.json();
+
+        // Open Plaid Link
+        const handler = Plaid.create({
+
+            token: data.link_token,
+
+            onSuccess: async function(public_token) {
+
+                // Exchange for NEW access token
+                await fetch("/plaid/exchange-token", {
+
+                    method: "POST",
+
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+
+                    body: JSON.stringify({
+                        public_token
+                    })
+                });
+
+                // Refresh dashboard
+                window.location.reload();
+            }
+        });
+
+        handler.open();
+    };
+}
+
 
 // ==========================================
 // Toggle pill selection

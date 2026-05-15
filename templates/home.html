@@ -95,16 +95,26 @@
     {% endif %}
 </div>
 
+{% if user.last_synced %}
 <div class="flex justify-center mt-8">
-    {% if user.last_synced %}
+    
     <form method="post" action="/plaid/sync">
         <button
             class="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-xl shadow">
             Sync Now
         </button>
     </form>
-    {% endif %}
 </div>
+
+<div class="flex justify-left mt-8">
+        <button id="additional-accounts-button"
+            class="bg-gray-700 hover:bg-gray-800 text-white px-4 py-2 rounded-lg">
+            Add additional accounts
+        </button>
+</div>
+
+{% endif %}
+
 
 {% if user.accounts|length >= 2 %}
 {% if user.last_synced %}

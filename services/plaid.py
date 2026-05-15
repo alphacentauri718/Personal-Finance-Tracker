@@ -13,9 +13,11 @@ from plaid.model.item_public_token_exchange_request import ItemPublicTokenExchan
 from plaid.model.transactions_get_request import TransactionsGetRequest
 from datetime import datetime, timedelta
 from plaid.model.accounts_get_request import AccountsGetRequest
+from plaid.model.item_get_request import ItemGetRequest
+from plaid.model.institutions_get_by_id_request import InstitutionsGetByIdRequest
 
 from routes.auth import get_current_user
-from models import Expense, Asset, Account
+from models import Expense, Asset, Account, PlaidItem
 
 from database import get_db
 
@@ -51,52 +53,53 @@ def sync_transactions(db, user):
 
     if not user.plaid_access_token:
         return
+    
+    for item in user.plaid_items:
+        for account in user.accounts:
+            
+            transactions = fetch_transactions(item.access_token)
 
-    for account in user.accounts:
-        
-        transactions = fetch_transactions(user.plaid_access_token)
+            for t in transactions:
 
-        for t in transactions:
+                #Deduplication check
+                if t["amount"] > 0:
+                    existing = db.query(Expense).filter(
+                        Expense.plaid_transaction_id == t["transaction_id"]
+                    ).first()
 
-            #Deduplication check
-            if t["amount"] > 0:
-                existing = db.query(Expense).filter(
-                    Expense.plaid_transaction_id == t["transaction_id"]
-                ).first()
+                    if existing:
+                        continue  # skip duplicates
 
-                if existing:
-                    continue  # skip duplicates
+                    expense = Expense(
+                        description=t["name"],
+                        category=t["category"][0] if t["category"] else "Other",
+                        amount=t["amount"],
+                        user_id=user.id,
+                        plaid_transaction_id=t["transaction_id"],
+                        plaid_account_id = account.plaid_account_id
+                    )
 
-                expense = Expense(
-                    description=t["name"],
-                    category=t["category"][0] if t["category"] else "Other",
-                    amount=t["amount"],
-                    user_id=user.id,
-                    plaid_transaction_id=t["transaction_id"],
-                    plaid_account_id = account.plaid_account_id
-                )
+                    db.add(expense)
+                    db.commit()
+                else:
+                    existing = db.query(Asset).filter(
+                        Asset.plaid_transaction_id == t["transaction_id"]
+                    ).first()
 
-                db.add(expense)
-                db.commit()
-            else:
-                existing = db.query(Asset).filter(
-                    Asset.plaid_transaction_id == t["transaction_id"]
-                ).first()
+                    if existing:
+                        continue  # skip duplicates
 
-                if existing:
-                    continue  # skip duplicates
+                    asset = Asset(
+                        name=t["name"],
+                        type=t["category"][0] if t["category"] else "Other",
+                        value=abs(t["amount"]),
+                        user_id=user.id,
+                        plaid_transaction_id=t["transaction_id"],
+                        plaid_account_id = account.plaid_account_id
+                    )
 
-                asset = Asset(
-                    name=t["name"],
-                    type=t["category"][0] if t["category"] else "Other",
-                    value=abs(t["amount"]),
-                    user_id=user.id,
-                    plaid_transaction_id=t["transaction_id"],
-                    plaid_account_id = account.plaid_account_id
-                )
-
-                db.add(asset)
-                db.commit()
+                    db.add(asset)
+                    db.commit()
 
     
     user.last_synced = datetime.now()
@@ -127,6 +130,13 @@ def exchange_token(data: TokenRequest, db: Session = Depends(get_db), user=Depen
     access_token = response["access_token"]
     item_id = response["item_id"]
 
+    item_request = ItemGetRequest(access_token=access_token)
+    item_response = client.item_get(item_request)
+    institution_id = item_response["item"]["institution_id"]
+    institution_request = InstitutionsGetByIdRequest(institution_id=institution_id,country_codes=[CountryCode("US")])
+    institution_response = client.institutions_get_by_id(institution_request)
+    institution_name = institution_response["institution"]["name"]
+
     accounts_response = client.accounts_get(
         AccountsGetRequest(access_token=access_token)
     )
@@ -140,12 +150,27 @@ def exchange_token(data: TokenRequest, db: Session = Depends(get_db), user=Depen
             plaid_account_id=acct["account_id"],
             name=acct["name"],
             account_type=acct.type.value,
-            subtype=acct.subtype.value if acct.subtype else None
+            subtype=acct.subtype.value if acct.subtype else None,
+            persistent_account_id = acct.persistent_account_id.value if acct.persistent_account_id else None
         )
+
+        if account.persistent_account_id is not None:
+            existing = db.query(Account).filter(Account.plaid_transaction_id == account.persistent_account_id and 
+                Account.user_id == user.id).first()
+
+            if existing:
+                continue # skip duplicate accounts
+                print("Acct skipped")
 
         db.add(account)
     
-    user.plaid_access_token = access_token
+    plaid_item = PlaidItem(
+        user_id = user.id,
+        plaid_item_id = item_id,
+        access_token = access_token,
+        institution_name = institution_name
+    )
+    db.add(plaid_item)
     db.commit()
 
     return RedirectResponse("/dashboard", status_code=302)
