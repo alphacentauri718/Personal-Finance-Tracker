@@ -155,10 +155,15 @@ def exchange_token(data: TokenRequest, db: Session = Depends(get_db), user=Depen
             mask = acct["mask"]
         )
 
-        existing = db.query(Account).filter(Account.name == account.name and Account.persistent_account_id == account.persistent_account_id
-                and Account.subtype == account.subtype and Account.mask == account.mask and Account.user_id == user.id).first()
+        existing = db.query(Account).filter(
+            Account.name == account.name, 
+            Account.persistent_account_id == account.persistent_account_id,
+            Account.subtype == account.subtype,
+            Account.mask == account.mask,
+            Account.user_id == user.id).first()
 
         if existing:
+            print("acct skipped")
             continue # skip duplicate accounts
             
         db.add(account)
