@@ -30,7 +30,7 @@
 
 <script src="https://cdn.plaid.com/link/v2/stable/link-initialize.js"></script>
 
-{% if not user.plaid_access_token %}
+{% if user.accounts|length == 0 %}
 <div class="flex justify-center mt-8">
     <button id="link-button"
         class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-xl shadow">

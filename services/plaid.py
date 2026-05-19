@@ -140,9 +140,9 @@ def exchange_token(data: TokenRequest, db: Session = Depends(get_db), user=Depen
     accounts_response = client.accounts_get(
         AccountsGetRequest(access_token=access_token)
     )
-    print(accounts_response["accounts"])
+    
     for acct in accounts_response["accounts"]:
-        print("starting acct")
+        
         account = Account(
             user_id=user.id,
             plaid_access_token=access_token,
@@ -151,17 +151,16 @@ def exchange_token(data: TokenRequest, db: Session = Depends(get_db), user=Depen
             name=acct["name"],
             account_type=acct.type.value,
             subtype=acct.subtype.value if acct.subtype else None,
-            persistent_account_id = acct.persistent_account_id.value if acct.persistent_account_id else None
+            persistent_account_id = acct.get("persistent_account_id", None),
+            mask = acct["mask"]
         )
 
-        if account.persistent_account_id is not None:
-            existing = db.query(Account).filter(Account.plaid_transaction_id == account.persistent_account_id and 
-                Account.user_id == user.id).first()
+        existing = db.query(Account).filter(Account.name == account.name and Account.persistent_account_id == account.persistent_account_id
+                and Account.subtype == account.subtype and Account.mask == account.mask and Account.user_id == user.id).first()
 
-            if existing:
-                continue # skip duplicate accounts
-                print("Acct skipped")
-
+        if existing:
+            continue # skip duplicate accounts
+            
         db.add(account)
     
     plaid_item = PlaidItem(

@@ -1,9 +1,8 @@
 from sqlalchemy import Column, Integer, String, Float, ForeignKey, Date, Boolean, DateTime
 from sqlalchemy.orm import relationship
 from sqlalchemy.dialects.postgresql import JSON
-from datetime import date
+from datetime import date, datetime
 from database import Base
-
 
 class User(Base):
     __tablename__ = "users"
@@ -15,7 +14,7 @@ class User(Base):
     has_synced = Column(Boolean, default=False)
     sync_daily = Column(Boolean, default=False)
     last_synced = Column(DateTime, nullable=True)
-    create_date_time = Column(Date, default = date.today())
+    create_date_time = Column(Date, default = datetime.utcnow())
 
     accounts = relationship("Account", back_populates="user")
 
@@ -33,7 +32,7 @@ class Asset(Base):
     user_id = Column(Integer, ForeignKey("users.id"))
     plaid_transaction_id = Column(String, unique=True, nullable=True)
     plaid_account_id = Column(String, ForeignKey("accounts.plaid_account_id"))
-    create_date_time = Column(Date, default = date.today())
+    create_date_time = Column(Date, default = datetime.utcnow())
 
 
 class Expense(Base):
@@ -46,7 +45,7 @@ class Expense(Base):
     user_id = Column(Integer, ForeignKey("users.id"))
     plaid_transaction_id = Column(String, unique=True, nullable=True)
     plaid_account_id = Column(String, ForeignKey("accounts.plaid_account_id"))
-    create_date_time = Column(Date, default = date.today())
+    create_date_time = Column(Date, default = datetime.utcnow())
 
 class NetWorthSnapshot(Base):
     __tablename__ = "net_worth_snapshots"
@@ -68,7 +67,8 @@ class Account(Base):
     account_type = Column(String)
     subtype = Column(String)
     persistent_account_id = Column(String)
-    create_date_time = Column(Date, default = date.today())
+    mask = Column(String)
+    create_date_time = Column(Date, default = datetime.utcnow())
 
     user = relationship("User", back_populates="accounts")
     plaid_items= relationship("PlaidItem", back_populates="accounts")
@@ -81,7 +81,7 @@ class SavedView(Base):
     user_id = Column(Integer,ForeignKey("users.id"),nullable=False)
     name = Column(String,nullable=False)
     account_ids = Column(JSON,nullable=False)
-    create_date_time = Column(Date, default = date.today())
+    create_date_time = Column(Date, default = datetime.utcnow())
     
     user = relationship("User",back_populates="saved_views")
 
@@ -94,7 +94,7 @@ class PlaidItem(Base):
     plaid_item_id = Column(String,nullable=False)
     access_token = Column(String,nullable=False, unique=True)
     institution_name = Column(String)
-    create_date_time = Column(Date, default = date.today())
+    create_date_time = Column(Date, default = datetime.utcnow())
 
     user = relationship("User",back_populates="plaid_items")
     accounts = relationship("Account", back_populates="plaid_items")
